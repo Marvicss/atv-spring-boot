@@ -1,13 +1,16 @@
-#
-# Build stage
-#
-FROM maven:3.9-eclipse-temurin-17-alpine AS build
-COPY . .
-RUN mvn clean package -DskipTests
+FROM ubuntu:latest AS build
 
-#
-# Package stage
-#
-FROM eclipse-temurin:17-jdk-alpine
-COPY --from=build /target/*.jar app.jar
-ENTRYPOINT ["java","-jar","app.jar"]
+RUN apt-get update
+RUN apt-get install openjdk-17-jdk -y
+COPY . .
+
+RUN apt-get install maven -y
+RUN mvn clean install
+
+FROM openjdk:17-slim
+
+EXPOSE 8080
+
+COPY --from=build /target/publicacao-0.0.1-SNAPSHOT.jar app.jar
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
